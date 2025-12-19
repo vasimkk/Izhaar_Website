@@ -7,27 +7,144 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header>
-        <h1>Our Pricing</h1>
-        <nav>
-            <a href="index.html">Home</a>
-            <a href="prices.html">Prices</a>
-            <a href="policy.html">Policy</a>
-        </nav>
-    </header>
-    <main>
-        <section>
-            <h2>How to Pay with Razorpay</h2>
-            <ol>
-                <li>Click the payment button below to start your order.</li>
-                <li>Complete payment using Razorpay Checkout.</li>
-                <li>After payment, your access will be granted automatically.</li>
-            </ol>
-            <button id="pay-btn">Pay Now</button>
-            <div id="payment-status"></div>
-        </section>
-    </main>
+        <header class="main-header">
+            <div class="header-content">
+                <div class="header-logo">
+                    <img src="logo.png" alt="Izhaar Logo" style="height:40px; vertical-align:middle;">
+                </div>
+                <nav class="header-nav">
+                    <a href="index.html">Home</a>
+                    <a href="prices.html">Prices</a>
+                    <a href="policy.html">Policy</a>
+                </nav>
+            </div>
+        </header>
+        <main>
+            <section class="pricing-section" style="max-width:500px;margin:40px auto;background:#fff;border-radius:16px;box-shadow:0 2px 16px rgba(0,0,0,0.08);padding:32px 24px;color:#222;">
+                <h1 style="text-align:center;font-size:2.2rem;font-weight:700;color:#ff3a76;margin-bottom:10px;">Izhaar Subscription</h1>
+                <div style="text-align:center;font-size:1.5rem;font-weight:600;margin-bottom:18px;">₹999 <span style="font-size:1rem;font-weight:400;color:#888;">/ month</span></div>
+                <ul style="list-style:none;padding:0;margin-bottom:24px;">
+                    <li style="margin-bottom:12px;display:flex;align-items:center;"><span style="color:#ff3a76;font-size:1.3rem;margin-right:8px;">&#10003;</span> 4 Letters</li>
+                    <li style="margin-bottom:12px;display:flex;align-items:center;"><span style="color:#ff3a76;font-size:1.3rem;margin-right:8px;">&#10003;</span> 2 Videos</li>
+                    <li style="margin-bottom:12px;display:flex;align-items:center;"><span style="color:#ff3a76;font-size:1.3rem;margin-right:8px;">&#10003;</span> 2 Songs</li>
+                    <li style="margin-bottom:12px;display:flex;align-items:center;"><span style="color:#ff3a76;font-size:1.3rem;margin-right:8px;">&#10003;</span> Unlimited Chat</li>
+                </ul>
+                <button id="pay-btn" style="width:100%;background:#ff3a76;color:#fff;font-size:1.2rem;font-weight:700;padding:16px;border:none;border-radius:10px;cursor:pointer;box-shadow:0 2px 8px rgba(255,58,118,0.08);transition:background 0.2s;">Get Subscription</button>
+                <div id="payment-status" style="margin-top:18px;text-align:center;font-size:1rem;color:#28a745;"></div>
+                <div style="margin-top:24px;text-align:center;color:#888;font-size:0.95rem;">Powered by Razorpay</div>
+            </section>
+        </main>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="script.js"></script>
+    <script>
+document.getElementById('pay-btn').addEventListener('click', async function() {
+
+  const paymentStatus = document.getElementById('payment-status');
+  paymentStatus.textContent = 'Processing...';
+
+  // Always get the latest accessToken from cookie before each API call
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+
+  // Get fresh token from cookie
+  const accessToken = getCookie('accessToken');
+  console.log('Using accessToken:', accessToken);
+  const payload = { amount: 999, currency: 'INR' };
+  console.log('Sending to backend:', payload);
+
+  // Debug: Show accessToken and headers
+  console.log('AccessToken used for order:', accessToken);
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + accessToken
+  };
+  console.log('Headers sent:', headers);
+
+  // Debug: decode JWT and show exp
+  function parseJwt (token) {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    } catch (e) { return {}; }
+  }
+  if (accessToken) {
+    const decoded = parseJwt(accessToken);
+    console.log('Decoded accessToken:', decoded);
+    if (decoded.exp) {
+      const expDate = new Date(decoded.exp * 1000);
+      console.log('Token expires at:', expDate.toLocaleString());
+      if (Date.now() > decoded.exp * 1000) {
+        paymentStatus.textContent = 'Access token expired. Please log in again.';
+        return;
+      }
+    }
+  }
+
+  try {
+    // 1. Create order on your backend
+    const res = await fetch('http://192.168.0.112:5000/api/razorpay/order', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(payload)
+    });
+    console.log('Order creation response status:', res.status);
+    const resText = await res.text();
+    console.log('Order creation response body:', resText);
+    if (res.status === 401) {
+      paymentStatus.textContent = 'Unauthorized: Invalid or missing access token.';
+      return;
+    }
+    const order = JSON.parse(resText);
+    if (!order.id) throw new Error('Order creation failed');
+
+    // 2. Open Razorpay Checkout
+    const options = {
+      key: 'rzp_test_Rt2p9OZv2KbFMZ', // Replace with your Razorpay key_id
+      amount: order.amount,
+      currency: order.currency,
+      name: 'Izhaar Subscription',
+      description: 'Monthly Subscription',
+      order_id: order.id,
+      handler: function (response) {
+        paymentStatus.textContent = 'Payment successful! Verifying...';
+        // Always get the latest accessToken from cookie before verify call
+        const freshToken = getCookie('accessToken');
+        fetch('http://192.168.0.112:5000/api/razorpay/verify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + freshToken
+          },
+          body: JSON.stringify({
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_signature: response.razorpay_signature
+          })
+        })
+        .then(res => res.json())
+        .then(data => {
+          paymentStatus.textContent = data.message || 'Payment verified!';
+        })
+        .catch(() => {
+          paymentStatus.textContent = 'Payment verification failed';
+        });
+      },
+      theme: { color: '#ff3a76' }
+    };
+    const rzp = new Razorpay(options);
+    rzp.open();
+    paymentStatus.textContent = '';
+  } catch (err) {
+    paymentStatus.textContent = err.message || 'Payment failed';
+  }
+});
+</script>
 </body>
 </html>
