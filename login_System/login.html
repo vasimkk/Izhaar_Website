@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Izhaar Website</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .login-container {
+      max-width: 400px;
+      margin: 60px auto;
+      background: #000;
+      border-radius: 14px;
+      padding: 30px;
+      color: #fff;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+    }
+    .login-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .login-subtitle {
+      font-size: 15px;
+      color: #999;
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .login-input {
+      width: 100%;
+      padding: 16px;
+      border: 1px solid #444;
+      background: #1a1a1a;
+      color: #fff;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      font-size: 16px;
+    }
+    .login-btn {
+      width: 100%;
+      background: #ff3a76;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 700;
+      padding: 18px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .login-forgot {
+      display: block;
+      margin-top: 14px;
+      text-align: center;
+      color: #ff3a76;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .login-eye {
+      position: absolute;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .input-group {
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-title">Log In</div>
+    <div class="login-subtitle">Welcome back! Enter your mobile and password.</div>
+    <form id="loginForm" autocomplete="off">
+      <input type="text" id="mobile" class="login-input" placeholder="Mobile Number" maxlength="10" required pattern="\d{10}">
+      <div class="input-group">
+        <input type="password" id="password" class="login-input" placeholder="Password" maxlength="12" required>
+        <button type="button" class="login-eye" id="togglePassword">👁️</button>
+      </div>
+      <button type="submit" class="login-btn">Login</button>
+    </form>
+    <a href="forgot-password.html" class="login-forgot">Forgot Password?</a>
+  </div>
+  <script src="login.js"></script>
+</body>
+</html>

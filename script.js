@@ -1,9 +1,110 @@
+// Razorpay Payment Integration for Prices Page (with explanation)
+// The 'key' (key_id) is required here because Razorpay Checkout runs in the user's browser and needs to know which merchant account to use.
+// This key is public and safe to use on the frontend. Your secret key must only be used on the backend.
+if (document.getElementById('pay-btn')) {
+    document.getElementById('pay-btn').onclick = async function () {
+        // 1. Create order on your backend
+        const orderRes = await fetch('http://localhost:5000/api/razorpay/order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount: 500 }) // amount in INR
+        });
+        const order = await orderRes.json();
+
+        // 2. Open Razorpay Checkout
+        const options = {
+            key: "rzp_test_Rt2p9OZv2KbFMZ", // Replace with your Razorpay key_id
+            amount: order.amount, // 
+            currency: order.currency,
+            name: "Izhaar",
+            description: "Access Payment",
+            order_id: order.id,
+            handler: function (response) {
+                // 3. Show success and optionally verify payment on backend
+                document.getElementById('payment-status').innerText = "Payment successful! Payment ID: " + response.razorpay_payment_id;
+                // Optionally: send response.razorpay_payment_id, response.razorpay_order_id, response.razorpay_signature to your backend for verification
+            },
+            prefill: {
+                name: "",
+                email: "",
+                contact: ""
+            },
+            theme: {
+                color: "#ff3a76"
+            }
+        };
+        const rzp = new Razorpay(options);
+        rzp.open();
+    };
+}
+// Razorpay Payment Integration for Prices Page
+document.addEventListener('DOMContentLoaded', function () {
+    const payBtn = document.getElementById('pay-btn');
+    if (payBtn) {
+        payBtn.addEventListener('click', function () {
+            // 1. Fetch order from backend (simulate for demo)
+            // In production, replace this with an actual API call to your backend to create an order
+            fetch('https://your-backend.example.com/create-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount: 10000, currency: 'INR' }) // Example: ₹100.00
+            })
+            .then(res => res.json())
+            .then(order => {
+                // 2. Use order.id in Razorpay Checkout
+                const options = {
+                    key: 'YOUR_RAZORPAY_KEY_ID', // Replace with your Razorpay key
+                    amount: order.amount,
+                    currency: order.currency,
+                    name: 'Izhaar',
+                    description: 'Premium Access',
+                    order_id: order.id,
+                    handler: function (response) {
+                        // 3. (Optional) Verify payment on backend
+                        fetch('https://your-backend.example.com/verify-payment', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_signature: response.razorpay_signature
+                            })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                document.getElementById('payment-status').textContent = 'Payment successful! Access granted.';
+                            } else {
+                                document.getElementById('payment-status').textContent = 'Payment verification failed.';
+                            }
+                        })
+                        .catch(() => {
+                            document.getElementById('payment-status').textContent = 'Error verifying payment.';
+                        });
+                    },
+                    theme: { color: '#ff1744' }
+                };
+                const rzp = new Razorpay(options);
+                rzp.open();
+            })
+            .catch(() => {
+                document.getElementById('payment-status').textContent = 'Error creating order. Please try again.';
+            });
+        });
+    }
+});
 // Set launch date (30 days from now)
 const launchDate = new Date();
 launchDate.setDate(launchDate.getDate() + 30);
 
 // Countdown Timer Function
 function updateCountdown() {
+    const daysEl = document.getElementById('days');
+    const hoursEl = document.getElementById('hours');
+    const minutesEl = document.getElementById('minutes');
+    const secondsEl = document.getElementById('seconds');
+    if (!daysEl || !hoursEl || !minutesEl || !secondsEl) return;
+
     const now = new Date().getTime();
     const distance = launchDate.getTime() - now;
 
@@ -14,21 +115,21 @@ function updateCountdown() {
     const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
     // Update countdown display
-    document.getElementById('days').textContent = String(days).padStart(2, '0');
-    document.getElementById('hours').textContent = String(hours).padStart(2, '0');
-    document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
-    document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+    daysEl.textContent = String(days).padStart(2, '0');
+    hoursEl.textContent = String(hours).padStart(2, '0');
+    minutesEl.textContent = String(minutes).padStart(2, '0');
+    secondsEl.textContent = String(seconds).padStart(2, '0');
 
     // Check if countdown is finished
     if (distance < 0) {
-        document.getElementById('days').textContent = '00';
-        document.getElementById('hours').textContent = '00';
-        document.getElementById('minutes').textContent = '00';
-        document.getElementById('seconds').textContent = '00';
+        daysEl.textContent = '00';
+        hoursEl.textContent = '00';
+        minutesEl.textContent = '00';
+        secondsEl.textContent = '00';
     }
 }
 
-// Update countdown every second
+// Update countdown every second (only if countdown exists)
 updateCountdown();
 setInterval(updateCountdown, 1000);
 

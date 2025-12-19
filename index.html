@@ -7,7 +7,22 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+     <header class="main-header">
+        <div class="header-content">
+            <div class="header-logo">
+                <img src="logo.png" alt="Izhaar Logo" style="height:40px; vertical-align:middle;">
+            </div>
+            <nav class="header-nav">
+                <a href="/index.html">Home</a>
+                <a href="prices.html">Prices</a>
+                <a href="login_System/login.html">Login</a>
+                <a href="login_System/register.html">Register</a>
+                <a href="policy.html">Policy</a>
+            </nav>
+        </div>
+    </header>
     <div class="container">
+        
         <!-- Main Content -->
         <div class="main-content">
             <div class="logo">
@@ -78,7 +93,42 @@
     </div>
 
     <script src="script.js"></script>
-
+    <script>
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+    // Check authentication
+    const accessToken = getCookie('accessToken');
+    const nav = document.querySelector('.header-nav');
+    if (accessToken) {
+      // User is authenticated: show Logout and Profile, hide Login/Register
+      if (nav) {
+        nav.innerHTML = `
+          <a href="index.html">Home</a>
+          <a href="prices.html">Prices</a>
+          <a href="profile.html">Profile</a>
+          <a href="#" id="logoutBtn">Logout</a>
+          <a href="policy.html">Policy</a>
+        `;
+      }
+      // Logout handler
+      document.addEventListener('DOMContentLoaded', function() {
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+          logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.cookie = 'accessToken=; Max-Age=0; path=/;';
+            document.cookie = 'refreshToken=; Max-Age=0; path=/;';
+            localStorage.removeItem('role');
+            sessionStorage.clear();
+            window.location.href = 'login2.html';
+          });
+        }
+      });
+    }
+  </script>
  
 </body>
     <footer>
